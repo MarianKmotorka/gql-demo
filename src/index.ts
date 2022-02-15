@@ -1,11 +1,29 @@
 import express from 'express'
-const app = express()
-const port = 3000
+import { ApolloServer } from 'apollo-server-express'
+import axios from 'axios'
 
-app.get('/', (_, res) => {
-  res.send('Hello World!')
-})
+import typeDefs from './typeDefs'
 
-app.listen(port, () => {
-  return console.log(`Express is listening at http://localhost:${port}`)
-})
+const resolvers = {
+  Query: {
+    todos: async () =>
+      (await axios.get('https://jsonplaceholder.typicode.com/todos')).data,
+  },
+}
+
+const main = async () => {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  })
+
+  const app = express()
+  await server.start()
+  server.applyMiddleware({ app })
+
+  app.listen(4000, () => {
+    console.log('server started on http://localhost:4000' + server.graphqlPath)
+  })
+}
+
+main()
